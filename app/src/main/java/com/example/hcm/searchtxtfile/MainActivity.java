@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -20,7 +22,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -28,7 +34,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+import com.hw.txtreaderlib.bean.TxtMsg;
+import com.hw.txtreaderlib.interfaces.ILoadListener;
+import com.hw.txtreaderlib.main.TxtReaderView;
+
+public class MainActivity extends Activity implements MyItemClickListener {
+    TxtReaderView tv;
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             "android.permission.READ_EXTERNAL_STORAGE",
@@ -38,11 +49,40 @@ public class MainActivity extends Activity {
     private EditText et_folder;            //输入的文件夹名
     private Button bt_open;                //打开按钮
     private Button bt_clear;            //清除按钮
-    private EditText et_filename;        //用于显示文件名
-    private EditText et_filecontent;    //用于显示txt文件内容
+    // private EditText et_filename;        //用于显示文件名
+    //  private EditText et_filecontent;    //用于显示txt文件内容
     final MyHandeler myHandeler = new MyHandeler(MainActivity.this);
+    final static List<BookInfo> datas = new ArrayList<>();
+
+    MyAdapter myAdapter;
+    private RecyclerView rv;
+
+    @Override
+    public void onItemClick(View view, int postion) {
+        Toast.makeText(this,"被点了", Toast.LENGTH_SHORT).show();
+//        String filePath=datas.get(postion).getBookName();
+        String filePath="/storage/emulated/0/hcm/a.txt";
+
+        tv.loadTxtFile(filePath, new ILoadListener() {
+            @Override
+            public void onSuccess() {
+              tv.setTextSize(80);
+            }
+
+            @Override
+            public void onFail(TxtMsg txtMsg) {
+
+            }
+
+            @Override
+            public void onMessage(String s) {
+
+            }
+        });
+    }
 
     private static class MyHandeler extends Handler {
+
         WeakReference<MainActivity> mainActivityWeakReference;
 
         public MyHandeler(MainActivity activity) {
@@ -50,17 +90,16 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        public void handleMessage(Message msg)
-        {
+        public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (null != mainActivityWeakReference)
-            {
+            if (null != mainActivityWeakReference) {
                 final MainActivity _actitity = mainActivityWeakReference.get();
-                switch (msg.what)
-                {
+                switch (msg.what) {
                     case 1:
                         final String a = msg.getData().getString("name");
                         final String b = msg.getData().getString("content");
+//                        bookInfo.setBookName(a);
+//                        datas.add(bookInfo);
 //                        _actitity.et_filename.setText(a);
 //                        _actitity.et_filecontent.setText(b);
                         break;
@@ -73,9 +112,19 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         verifyStoragePermissions(this);
+        rv = findViewById(R.id.rv);
+        tv=findViewById(R.id.activity_hwtxtplay_readerView);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+
         et_folder = (EditText) findViewById(R.id.ET_Folder);
-        et_filename = (EditText) findViewById(R.id.ET_FileName);
-        et_filecontent = (EditText) findViewById(R.id.ET_FileContent);
+        myAdapter = new MyAdapter(this, datas);
+        myAdapter.setOnItemClickListener(this);
+        rv.setAdapter(myAdapter);
+        rv.setLayoutManager(layoutManager);
+        rv.setHasFixedSize(true);
+        rv.addItemDecoration(new DividerItemDecoration(this, layoutManager.getOrientation()));
+//        et_filename = (EditText) findViewById(R.id.ET_FileName);
+//        et_filecontent = (EditText) findViewById(R.id.ET_FileContent);
 
         bt_open = (Button) findViewById(R.id.But_Open);
         bt_open.setOnClickListener(new OnClickListener() {//打开按钮监听
@@ -116,8 +165,8 @@ public class MainActivity extends Activity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        et_filename.setText(getFileName(files));
-                                        et_filecontent.setText(getFileContent(files));
+//                                        et_filename.setText(getFileName(files));
+//                                        et_filecontent.setText(getFileContent(files));
                                     }
                                 });
                             }
@@ -136,8 +185,8 @@ public class MainActivity extends Activity {
         bt_clear.setOnClickListener(new OnClickListener() {//清除按钮监听
             public void onClick(View arg0) {
                 et_folder.setText("");
-                et_filename.setText("");
-                et_filecontent.setText("");
+//                et_filename.setText("");
+//                et_filecontent.setText("");
             }
         });
 
@@ -213,13 +262,19 @@ public class MainActivity extends Activity {
                             + file.getName().toString() + file.getPath().toString());
                 } else {
                     String fileName = file.getName();
-                    String filelj=file.getAbsolutePath();
+                    String filelj = file.getAbsolutePath();
                     if (fileName.endsWith(".txt")) {
                         String s = fileName.substring(0, fileName.lastIndexOf(".")).toString();
                         Log.i("zeng", "文件名txt：：   " + s);
-                        str += fileName.substring(0, fileName.lastIndexOf(".")) + "\n"+"路径："+filelj;
+                        str = fileName.substring(0, fileName.lastIndexOf(".")) + "\n" + "路径：" + filelj + "\n";
+                        BookInfo bookInfo = new BookInfo();
+                         bookInfo.setBookName(str);
+                        datas.add(bookInfo);
+
                     }
+
                 }
+
             }
 
         }
