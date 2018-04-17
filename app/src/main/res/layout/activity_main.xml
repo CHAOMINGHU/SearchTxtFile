@@ -13,21 +13,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="文件名" />
-        <EditText
-            android:hint="foldername"
-            android:id="@+id/ET_Folder"
-            android:layout_width="140dip"
-            android:layout_height="wrap_content" />
+
         <Button
-            android:text="打开"
+            android:text="开始扫描"
             android:id="@+id/But_Open"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-        <Button
-            android:text="清除"
-            android:id="@+id/But_Clear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+
     </LinearLayout>
 <android.support.v7.widget.RecyclerView
     android:id="@+id/rv"

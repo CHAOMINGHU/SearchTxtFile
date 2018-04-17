@@ -45,12 +45,8 @@ public class MainActivity extends Activity implements MyItemClickListener {
             "android.permission.READ_EXTERNAL_STORAGE",
             "android.permission.WRITE_EXTERNAL_STORAGE"};
 
-
-    private EditText et_folder;            //输入的文件夹名
+    BookInfo bookInfo;
     private Button bt_open;                //打开按钮
-    private Button bt_clear;            //清除按钮
-    // private EditText et_filename;        //用于显示文件名
-    //  private EditText et_filecontent;    //用于显示txt文件内容
     final MyHandeler myHandeler = new MyHandeler(MainActivity.this);
     final static List<BookInfo> datas = new ArrayList<>();
 
@@ -59,14 +55,14 @@ public class MainActivity extends Activity implements MyItemClickListener {
 
     @Override
     public void onItemClick(View view, int postion) {
-        Toast.makeText(this,"被点了", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "被点了", Toast.LENGTH_SHORT).show();
 //        String filePath=datas.get(postion).getBookName();
-        String filePath="/storage/emulated/0/hcm/a.txt";
+        String filePath = "/storage/emulated/0/hcm/a.txt";
 
         tv.loadTxtFile(filePath, new ILoadListener() {
             @Override
             public void onSuccess() {
-              tv.setTextSize(80);
+                tv.setTextSize(80);
             }
 
             @Override
@@ -113,10 +109,8 @@ public class MainActivity extends Activity implements MyItemClickListener {
         setContentView(R.layout.activity_main);
         verifyStoragePermissions(this);
         rv = findViewById(R.id.rv);
-        tv=findViewById(R.id.activity_hwtxtplay_readerView);
+        tv = findViewById(R.id.activity_hwtxtplay_readerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-
-        et_folder = (EditText) findViewById(R.id.ET_Folder);
         myAdapter = new MyAdapter(this, datas);
         myAdapter.setOnItemClickListener(this);
         rv.setAdapter(myAdapter);
@@ -131,65 +125,49 @@ public class MainActivity extends Activity implements MyItemClickListener {
             public void onClick(View arg0) {
                 //若输入的文件夹名为空
 
-                if (et_folder.getText().toString().trim().equals("")) {
-                    Toast.makeText(getApplicationContext(),
-                            "输入为空", Toast.LENGTH_SHORT).show();
-                } else {
-                    // 获得SD卡根目录路径 "/sdcard"
-                    File sdDir = Environment.getExternalStorageDirectory();
-                    // File sdDir = Environment.getDataDirectory().getParentFile();
-                    final File path = new File(sdDir + File.separator
-                            + et_folder.getText().toString().trim());
 
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
+                // 获得SD卡根目录路径 "/sdcard"
+                File sdDir = Environment.getExternalStorageDirectory();
+                // File sdDir = Environment.getDataDirectory().getParentFile();
+                final File path = new File(sdDir + File.separator);
 
-                            // 判断SD卡是否存在，并且是否具有读写权限
-                            if (Environment.getExternalStorageState().
-                                    equals(Environment.MEDIA_MOUNTED)) {
-                                final File[] files = path.listFiles();// 读取文件夹下文件
-                                Message msg = Message.obtain();
-                                Bundle bundle = new Bundle();
-                                String a = getFileName(files);
-                                bundle.putString("name", a);
-                                bundle.putString("content", getFileContent(files));
-                                msg.what = 1;
-                                msg.setData(bundle);
-                                myHandeler.handleMessage(msg);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // 判断SD卡是否存在，并且是否具有读写权限
+                        if (Environment.getExternalStorageState().
+                                equals(Environment.MEDIA_MOUNTED)) {
+                            final File[] files = path.listFiles();// 读取文件夹下文件
+                            Message msg = Message.obtain();
+                            Bundle bundle = new Bundle();
+                            String a = getFileName(files);
+                            bundle.putString("name", a);
+                            bundle.putString("content", getFileContent(files));
+                            msg.what = 1;
+                            msg.setData(bundle);
+
 //                                et_filename.setText("");
 //                                et_filecontent.setText("");
 //
 //                                et_filename.setText(getFileName(files));
 //                                et_filecontent.setText(getFileContent(files));
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
 //                                        et_filename.setText(getFileName(files));
 //                                        et_filecontent.setText(getFileContent(files));
-                                    }
-                                });
-                            }
-
+                                }
+                            });
                         }
-                    }).start();
 
+                    }
+                }).start();
 
-                }
 
             }
 
         });
-
-        bt_clear = (Button) findViewById(R.id.But_Clear);
-        bt_clear.setOnClickListener(new OnClickListener() {//清除按钮监听
-            public void onClick(View arg0) {
-                et_folder.setText("");
-//                et_filename.setText("");
-//                et_filecontent.setText("");
-            }
-        });
-
     }
 
     public static void verifyStoragePermissions(Activity activity) {
@@ -243,6 +221,7 @@ public class MainActivity extends Activity implements MyItemClickListener {
 
                     }
                 }
+
             }
 
         }
@@ -267,9 +246,15 @@ public class MainActivity extends Activity implements MyItemClickListener {
                         String s = fileName.substring(0, fileName.lastIndexOf(".")).toString();
                         Log.i("zeng", "文件名txt：：   " + s);
                         str = fileName.substring(0, fileName.lastIndexOf(".")) + "\n" + "路径：" + filelj + "\n";
-                        BookInfo bookInfo = new BookInfo();
-                         bookInfo.setBookName(str);
+                        bookInfo = new BookInfo();
+                        bookInfo.setBookName(str);
                         datas.add(bookInfo);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                myAdapter.notifyDataSetChanged();
+                            }
+                        });
 
                     }
 
